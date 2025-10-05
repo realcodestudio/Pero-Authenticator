@@ -6,6 +6,7 @@ import com.rcbs.wearotp.data.OtpAccount
 import com.rcbs.wearotp.data.OtpType
 import com.rcbs.wearotp.repository.OtpRepository
 import com.rcbs.wearotp.utils.OtpGenerator
+import com.rcbs.wearotp.utils.OtpAuthData
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -98,19 +99,54 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
     }
     
     fun addAccountFromUri(uri: String): Boolean {
-        val otpData = OtpGenerator.parseOtpAuthUri(uri) ?: return false
+        android.util.Log.d("OtpViewModel", "开始解析URI: $uri")
         
-        val account = OtpAccount(
-            name = otpData.account,
-            issuer = otpData.issuer,
+        return try {
+            val otpData = OtpGenerator.parseOtpAuthUri(uri)
+            if (otpData == null) {
+                android.util.Log.e("OtpViewModel", "URI解析失败")
+                return false
+            }
+            
+            android.util.Log.d("OtpViewModel", "解析成功: type=${otpData.type}, account=${otpData.account}, issuer=${otpData.issuer}")
+            
+            val account = convertOtpAuthDataToAccount(otpData)
+            android.util.Log.d("OtpViewModel", "创建账户对象: $account")
+            
+            addAccount(account)
+            android.util.Log.d("OtpViewModel", "账户添加完成")
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("OtpViewModel", "添加账户时发生异常", e)
+            false
+        }
+    }
+    
+    /**
+     * 将 OtpAuthData 转换为 OtpAccount
+     */
+    private fun convertOtpAuthDataToAccount(otpData: OtpAuthData): OtpAccount {
+        return OtpAccount(
+            name = otpData.account.ifEmpty { "Unknown Account" },
+            issuer = otpData.issuer.ifEmpty { "Unknown Issuer" },
             secret = otpData.secret,
             algorithm = otpData.algorithm,
             digits = otpData.digits,
             period = otpData.period,
             type = if (otpData.type.lowercase() == "totp") OtpType.TOTP else OtpType.HOTP
         )
+    }
+    
+    /**
+     * 测试GitHub setup key
+     */
+    fun testGitHubSetupKey(setupKey: String, username: String = "testuser"): Boolean {
+        android.util.Log.d("OtpViewModel", "测试GitHub setup key: $setupKey")
         
-        addAccount(account)
-        return true
+        // 创建标准的GitHub URI格式
+        val testUri = OtpGenerator.createGitHubTestUri(setupKey, username)
+        android.util.Log.d("OtpViewModel", "生成的测试URI: $testUri")
+        
+        return addAccountFromUri(testUri)
     }
 }

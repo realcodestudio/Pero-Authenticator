@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +26,8 @@ import com.rcbs.wearotp.viewmodel.OtpViewModel
 @Composable
 fun MainScreen(
     viewModel: OtpViewModel = viewModel(),
-    onAddManually: () -> Unit = {}
+    onAddManually: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val accounts by viewModel.accounts.collectAsState()
@@ -41,12 +43,20 @@ fun MainScreen(
         if (result.resultCode == Activity.RESULT_OK) {
             val qrResult = result.data?.getStringExtra("qr_result")
             qrResult?.let { uri ->
+                android.util.Log.d("QRScanner", "扫描到的URI: $uri")
                 if (viewModel.addAccountFromUri(uri)) {
-                    // 成功添加账户
+                    android.util.Log.d("QRScanner", "成功添加账户")
+                    android.widget.Toast.makeText(context, "账户添加成功", android.widget.Toast.LENGTH_SHORT).show()
                 } else {
-                    // 显示错误消息
+                    android.util.Log.e("QRScanner", "解析URI失败")
+                    android.widget.Toast.makeText(context, "无效的OTP二维码", android.widget.Toast.LENGTH_SHORT).show()
                 }
+            } ?: run {
+                android.util.Log.e("QRScanner", "未获取到扫描结果")
+                android.widget.Toast.makeText(context, "扫描失败，请重试", android.widget.Toast.LENGTH_SHORT).show()
             }
+        } else {
+            android.util.Log.d("QRScanner", "扫描取消或失败，结果码: ${result.resultCode}")
         }
     }
     
@@ -55,6 +65,9 @@ fun MainScreen(
             TopAppBar(
                 title = { Text("WearOTP") },
                 actions = {
+                    IconButton(onClick = onNavigateToBackup) {
+                        Icon(Icons.Default.Settings, contentDescription = "备份设置")
+                    }
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(Icons.Default.Add, contentDescription = "添加账户")
@@ -83,6 +96,21 @@ fun MainScreen(
                                 },
                                 leadingIcon = {
                                     Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("测试GitHub Key") },
+                                onClick = {
+                                    showMenu = false
+                                    android.util.Log.d("MainScreen", "开始测试GitHub setup key")
+                                    if (viewModel.testGitHubSetupKey("G4CTTXN3WMZKFZG2", "testuser")) {
+                                        android.widget.Toast.makeText(context, "GitHub测试账户添加成功", android.widget.Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        android.widget.Toast.makeText(context, "GitHub测试失败", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Settings, contentDescription = null)
                                 }
                             )
                         }

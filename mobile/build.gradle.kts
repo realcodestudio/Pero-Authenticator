@@ -107,8 +107,14 @@ dependencies {
     // Wear OS Data Layer for synchronization
     implementation("com.google.android.gms:play-services-wearable:18.0.0")
     
+    // Coroutines support for Google Play Services
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    
     // JSON serialization for backup/restore
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    
+    // Biometric authentication
+    implementation("androidx.biometric:biometric:1.1.0")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

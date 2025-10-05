@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -16,9 +18,13 @@ import androidx.navigation.compose.rememberNavController
 import com.rcbs.wearotp.data.OtpDatabase
 import com.rcbs.wearotp.repository.OtpRepository
 import com.rcbs.wearotp.ui.screens.AddAccountScreen
+import com.rcbs.wearotp.ui.screens.BackupScreen
 import com.rcbs.wearotp.ui.screens.MainScreen
+import com.rcbs.wearotp.ui.screens.SettingsScreen
 import com.rcbs.wearotp.ui.theme.WearOTPTheme
+import com.rcbs.wearotp.utils.SettingsManager
 import com.rcbs.wearotp.viewmodel.OtpViewModel
+import com.rcbs.wearotp.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +36,13 @@ class MainActivity : ComponentActivity() {
         val repository = OtpRepository(database.otpDao())
         
         setContent {
-            WearOTPTheme {
+            val settingsManager = SettingsManager(this)
+            val settings by settingsManager.settings.collectAsState()
+            
+            WearOTPTheme(
+                themeMode = settings.themeMode,
+                colorTheme = settings.colorTheme
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -56,6 +68,9 @@ fun OtpApp(repository: OtpRepository) {
                 viewModel = viewModel,
                 onAddManually = {
                     navController.navigate("add_account")
+                },
+                onNavigateToBackup = {
+                    navController.navigate("settings")
                 }
             )
         }
@@ -66,6 +81,25 @@ fun OtpApp(repository: OtpRepository) {
                     navController.popBackStack()
                 },
                 viewModel = viewModel
+            )
+        }
+        
+        composable("settings") {
+            SettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToBackup = {
+                    navController.navigate("backup")
+                }
+            )
+        }
+        
+        composable("backup") {
+            BackupScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
     }
