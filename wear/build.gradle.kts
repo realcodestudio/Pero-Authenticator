@@ -6,18 +6,18 @@ plugins {
 }
 
 android {
-    namespace = "com.rcbs.wearotp"
-    compileSdk = 36
+    namespace = "com.rcbs.authenticator"
+    compileSdk = 34  // 降低编译SDK版本以提高兼容性
 
     defaultConfig {
-        applicationId = "com.rcbs.wearotp"
-        minSdk = 30  // Android 11 minimum for Wear OS 3
-        targetSdk = 36
+        applicationId = "com.rcbs.authenticator"
+        minSdk = 30  // Android 11 (API 30) for Wear OS 3+
+        targetSdk = 34  // 降低到34以提高兼容性
         versionCode = 1
         versionName = "1.0"
         
         ndk {
-            abiFilters += listOf("armeabi-v7a", "x86_64")
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")  // 支持更多架构
         }
     }
 
@@ -48,7 +48,6 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    useLibrary("wear-sdk")
     buildFeatures {
         compose = true
     }
@@ -61,32 +60,42 @@ android {
 }
 
 dependencies {
-    implementation(libs.play.services.wearable)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.wear.tooling.preview)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.core.splashscreen)
+    // Wear OS 核心依赖 - 设为可选，兼容没有Google服务的设备
+    compileOnly("com.google.android.gms:play-services-wearable:18.1.0")
     
-    // Lifecycle for Wear
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Compose BOM - 使用稳定版本以确保兼容性
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")
+    
+    // Wear Compose 专用库
+    implementation("androidx.wear.compose:compose-material:1.3.1")
+    implementation("androidx.wear.compose:compose-foundation:1.3.1")
+    implementation("androidx.wear.compose:compose-navigation:1.3.1")
+    
+    // Activity Compose
+    implementation("androidx.activity:activity-compose:1.8.2")
+    
+    // Core 和 Lifecycle
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    
+    // Splash Screen
+    implementation("androidx.core:core-splashscreen:1.0.1")
     
     // Crypto for OTP generation
-    implementation(libs.commons.codec)
-    
-    // Wear OS Data Layer for synchronization
-    implementation("com.google.android.gms:play-services-wearable:18.0.0")
+    implementation("commons-codec:commons-codec:1.15")
     
     // JSON serialization for backup/restore
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // 测试依赖
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

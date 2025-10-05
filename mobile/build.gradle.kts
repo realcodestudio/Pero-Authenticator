@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.rcbs.wearotp"
+    namespace = "com.rcbs.authenticator"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.rcbs.wearotp"
+        applicationId = "com.rcbs.authenticator"
         minSdk = 30  // Android 11 minimum
         targetSdk = 36
         versionCode = 1
@@ -124,5 +124,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     
-    wearApp(project(":wear"))
+    // wearApp(project(":wear"))  // 已移除，因为包名不同步
 }

@@ -1,0 +1,187 @@
+package com.rcbs.authenticator.ui.screens
+
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rcbs.authenticator.ui.components.OtpCard
+import com.rcbs.authenticator.ui.scanner.QrScannerActivity
+import com.rcbs.authenticator.viewmodel.OtpViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    viewModel: OtpViewModel = viewModel(),
+    onAddManually: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToSync: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val accounts by viewModel.accounts.collectAsState()
+    val currentCodes by viewModel.currentCodes.collectAsState()
+    val remainingTime by viewModel.remainingTime.collectAsState()
+    
+    var showMenu by remember { mutableStateOf(false) }
+    
+    // QR扫描器启动器
+    val qrScannerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val qrResult = result.data?.getStringExtra("qr_result")
+            qrResult?.let { uri ->
+                android.util.Log.d("QRScanner", "扫描到的URI: $uri")
+                if (viewModel.addAccountFromUri(uri)) {
+                    android.util.Log.d("QRScanner", "成功添加账户")
+                    android.widget.Toast.makeText(context, "账户添加成功", android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.util.Log.e("QRScanner", "解析URI失败")
+                    android.widget.Toast.makeText(context, "无效的OTP二维码", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } ?: run {
+                android.util.Log.e("QRScanner", "未获取到扫描结果")
+                android.widget.Toast.makeText(context, "扫描失败，请重试", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            android.util.Log.d("QRScanner", "扫描取消或失败，结果码: ${result.resultCode}")
+        }
+    }
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Pero Authenticator") },
+                actions = {
+                    IconButton(onClick = onNavigateToBackup) {
+                        Icon(Icons.Default.Add, contentDescription = "备份")
+                    }
+                    IconButton(onClick = onNavigateToSync) {
+                        Icon(Icons.Default.Add, contentDescription = "手表同步")
+                    }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "设置")
+                    }
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.Add, contentDescription = "添加账户")
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("扫描二维码") },
+                                onClick = {
+                                    showMenu = false
+                                    val intent = Intent(context, QrScannerActivity::class.java)
+                                    qrScannerLauncher.launch(intent)
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("手动添加") },
+                                onClick = {
+                                    showMenu = false
+                                    onAddManually()
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("测试GitHub Key") },
+                                onClick = {
+                                    showMenu = false
+                                    android.util.Log.d("MainScreen", "开始测试GitHub setup key")
+                                    if (viewModel.testGitHubSetupKey("G4CTTXN3WMZKFZG2", "testuser")) {
+                                        android.widget.Toast.makeText(context, "GitHub测试账户添加成功", android.widget.Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        android.widget.Toast.makeText(context, "GitHub测试失败", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Settings, contentDescription = null)
+                                }
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        if (accounts.isEmpty()) {
+            // 空状态
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "还没有OTP账户",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "点击右上角的 + 按钮添加您的第一个账户",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 32.dp)
+                    )
+                }
+            }
+        } else {
+            // 账户列表
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                items(accounts) { account ->
+                    OtpCard(
+                        account = account,
+                        otpCode = currentCodes[account.id] ?: "------",
+                        remainingTime = remainingTime,
+                        onDelete = {
+                            viewModel.deleteAccount(account)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}

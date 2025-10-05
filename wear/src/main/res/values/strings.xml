@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WearOTP</string>
+    <string name="app_name">Pero Authenticator</string>
     <string name="no_accounts">无OTP账户</string>
     <string name="sync_from_phone">请在手机上添加账户</string>
     <string name="copied_to_clipboard">已复制</string>

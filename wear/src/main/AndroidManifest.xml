@@ -2,20 +2,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- Wear OS 特性声明 -->
     <uses-feature android:name="android.hardware.type.watch" />
+    <uses-feature 
+        android:name="android.hardware.touchscreen" 
+        android:required="false" />
+    <uses-feature 
+        android:name="android.hardware.wifi" 
+        android:required="false" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault">
+        android:theme="@android:style/Theme.DeviceDefault"
+        android:extractNativeLibs="false">
         <uses-library
             android:name="com.google.android.wearable"
-            android:required="true" />
-        <uses-library
-            android:name="wear-sdk"
             android:required="false" />
 
         <!--
@@ -24,6 +30,11 @@
         -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+        
+        <!-- 兼容没有Google Wearable服务的设备 -->
+        <meta-data
+            android:name="com.google.android.wearable.beta.app"
             android:value="true" />
 
         <activity
@@ -38,17 +49,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Wear OS 同步监听服务 -->
-        <service
-            android:name=".sync.WearSyncListener"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <action android:name="com.google.android.gms.wearable.CAPABILITY_CHANGED" />
-                <data android:scheme="wear" />
-            </intent-filter>
-        </service>
+        <!-- 同步服务已移除，改为独立运行模式 -->
     </application>
 
 </manifest>

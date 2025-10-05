@@ -1,4 +1,4 @@
-# WearOTP - Android & Wear OS OTP应用
+# Pero Authenticator - Android & Wear OS OTP应用
 
 一个支持Android 11和Wear OS的双平台OTP（一次性密码）认证应用，支持armv7和x86_64架构。
 
@@ -35,9 +35,9 @@
 ## 项目结构
 
 ```
-WearOTP/
+PeroAuthenticator/
 ├── mobile/                 # 手机端应用
-│   ├── src/main/java/com/rcbs/wearotp/
+│   ├── src/main/java/com/rcbs/authenticator/
 │   │   ├── data/          # 数据层 (Room数据库)
 │   │   ├── repository/    # 数据仓库
 │   │   ├── viewmodel/     # ViewModel层
@@ -45,7 +45,7 @@ WearOTP/
 │   │   └── utils/         # 工具类 (OTP生成器)
 │   └── build.gradle.kts
 ├── wear/                  # 手表端应用
-│   ├── src/main/java/com/rcbs/wearotp/
+│   ├── src/main/java/com/rcbs/authenticator/
 │   │   ├── data/          # 数据模型
 │   │   ├── presentation/  # UI界面
 │   │   ├── viewmodel/     # ViewModel层
